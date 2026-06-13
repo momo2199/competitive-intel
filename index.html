@@ -551,19 +551,7 @@
             <h1>Competitive Intelligence Briefing Tool</h1>
             <p class="subtitle">Generate a tailored intelligence briefing with live web research and follow-up chat.</p>
 
-            <div class="section-title">API Keys</div>
-
-            <div class="api-row">
-                <label>Anthropic API Key</label>
-                <input type="password" id="anthropicKey" placeholder="sk-ant-..." />
-            </div>
-
-            <div class="api-row">
-                <label>Tavily API Key</label>
-                <input type="password" id="tavilyKey" placeholder="tvly-..." />
-            </div>
-
-            <hr class="divider">
+        
 
             <div class="section-title">Research Parameters</div>
 
@@ -653,11 +641,11 @@ Examples:
         let chatHistory = [];
 
         async function searchWeb(query, tavilyKey) {
-            const response = await fetch('https://api.tavily.com/search', {
+            const response = await fetch('/api/tavily', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    api_key: tavilyKey,
+        
                     query: query,
                     search_depth: 'basic',
                     max_results: 4,
@@ -669,22 +657,15 @@ Examples:
         }
 
         async function generateBriefing() {
-            const anthropicKey = document.getElementById('anthropicKey').value.trim();
-            const tavilyKey = document.getElementById('tavilyKey').value.trim();
             const company = document.getElementById('companyInput').value.trim();
             const disambig = document.getElementById('disambigInput').value.trim();
             const purpose = document.getElementById('purposeInput').value.trim();
-            // Save API keys to local storage
-            localStorage.setItem('anthropic_key', anthropicKey);
-            localStorage.setItem('tavily_key', tavilyKey);
             const btn = document.getElementById('generateBtn');
             const loading = document.getElementById('loading');
             const output = document.getElementById('output');
             const error = document.getElementById('error');
             const loadingStep = document.getElementById('loadingStep');
 
-            if (!anthropicKey) { showError('Please enter your Anthropic API key.'); return; }
-            if (!tavilyKey) { showError('Please enter your Tavily API key.'); return; }
             if (!company) { showError('Please enter a company name.'); return; }
 
             error.classList.remove('visible');
@@ -694,8 +675,6 @@ Examples:
             btn.disabled = true;
             btn.textContent = 'Generating...';
 
-            anthropicKeyGlobal = anthropicKey;
-            tavilyKeyGlobal = tavilyKey;
             companyContext = company;
             purposeContext = purpose;
 
@@ -756,7 +735,7 @@ ${purpose ? '## Relevance to Your Purpose' : ''}
 
 Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}.`;
 
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                const response = await fetch('/api/anthropic', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -962,7 +941,7 @@ ${additionalContext}
 
 Answer the user's question using the briefing context and any additional research provided. Be concise and specific. Use markdown formatting where helpful. If you searched the web for this answer, briefly note that.`;
 
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                const response = await fetch('/api/anthropic', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
