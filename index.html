@@ -921,7 +921,7 @@ Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US'
                     searchingDiv.innerHTML = '<div class="chat-searching">Searching the web...</div>';
                     document.getElementById('chatMessages').appendChild(searchingDiv);
 
-                    const searchResult = await searchWeb(`${companyContext} ${message}');
+                    const searchResult = await searchWeb(`${companyContext} ${message}`);
                     if (searchResult.results) {
                         additionalContext = '\n\nADDITIONAL WEB RESEARCH:\n' + searchResult.results.map(r => `${r.title}: ${r.content}`).join('\n');
                     }
