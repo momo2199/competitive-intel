@@ -636,11 +636,10 @@ Examples:
         let briefingContext = '';
         let purposeContext = '';
         let companyContext = '';
-        let tavilyKeyGlobal = '';
         let anthropicKeyGlobal = '';
         let chatHistory = [];
 
-        async function searchWeb(query, tavilyKey) {
+        async function searchWeb(query) {
             const response = await fetch('/api/tavily', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -685,11 +684,11 @@ Examples:
                 loadingStep.textContent = 'Searching for latest news and financials...';
 
                 const searches = await Promise.all([
-                    searchWeb(`${searchCompany} company overview business model 2025 2026`, tavilyKey),
-                    searchWeb(`${searchCompany} latest news developments 2025 2026`, tavilyKey),
-                    searchWeb(`${searchCompany} financial results revenue earnings 2025 2026`, tavilyKey),
-                    searchWeb(`${searchCompany} strategy priorities goals 2025 2026`, tavilyKey),
-                    searchWeb(`${searchCompany} CEO COO leadership team executives`, tavilyKey),
+                    searchWeb(`${searchCompany} company overview business model 2025 2026`),
+                    searchWeb(`${searchCompany} latest news developments 2025 2026`),
+                    searchWeb(`${searchCompany} financial results revenue earnings 2025 2026`),
+                    searchWeb(`${searchCompany} strategy priorities goals 2025 2026`),
+                    searchWeb(`${searchCompany} CEO COO leadership team executives`),
                 ]);
 
                 const allSources = [];
@@ -922,7 +921,7 @@ Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US'
                     searchingDiv.innerHTML = '<div class="chat-searching">Searching the web...</div>';
                     document.getElementById('chatMessages').appendChild(searchingDiv);
 
-                    const searchResult = await searchWeb(`${companyContext} ${message}`, tavilyKeyGlobal);
+                    const searchResult = await searchWeb(`${companyContext} ${message}');
                     if (searchResult.results) {
                         additionalContext = '\n\nADDITIONAL WEB RESEARCH:\n' + searchResult.results.map(r => `${r.title}: ${r.content}`).join('\n');
                     }
@@ -1004,12 +1003,7 @@ Answer the user's question using the briefing context and any additional researc
             document.getElementById('companyInput').focus();
         }
           // Load saved API keys on page open
-        window.addEventListener('load', function() {
-            const savedAnthropic = localStorage.getItem('anthropic_key');
-            const savedTavily = localStorage.getItem('tavily_key');
-            if (savedAnthropic) document.getElementById('anthropicKey').value = savedAnthropic;
-            if (savedTavily) document.getElementById('tavilyKey').value = savedTavily;
-        });
+        
     </script>
 </body>
 </html>
