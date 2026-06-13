@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competitive Intelligence Briefing Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        .left-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 32px;
+            transition: flex 0.3s ease;
+        }
+
+        .left-panel.with-chat {
+            flex: 0 0 60%;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 28px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .api-row {
+            margin-bottom: 12px;
+        }
+
+        .api-row label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .api-row input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: monospace;
+            outline: none;
+            background: white;
+        }
+
+        .api-row input:focus { border-color: #333; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 20px 0;
+        }
+
+        .field-row { margin-bottom: 14px; }
+
+        .field-row label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .field-row input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        .field-row input:focus { border-color: #333; }
+
+        .field-row textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            background: white;
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .field-row textarea:focus { border-color: #333; }
+
+        .field-hint {
+            font-size: 11px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .company-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .company-row .field-main {
+            flex: 1;
+        }
+
+        .company-row .field-secondary {
+            flex: 0 0 240px;
+        }
+
+        .company-row label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .company-row input {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+
+        .company-row input:focus { border-color: #333; }
+
+        .generate-row { margin-top: 20px; margin-bottom: 28px; }
+
+        button {
+            padding: 10px 22px;
+            background: #111;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        button:hover { background: #333; }
+        button:disabled { background: #999; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: white;
+            color: #111;
+            border: 1px solid #ddd;
+            margin-left: 8px;
+        }
+
+        .btn-secondary:hover { background: #f5f5f5; }
+
+        .error {
+            background: #fff0f0;
+            border: 1px solid #ffcccc;
+            border-radius: 8px;
+            padding: 14px;
+            color: #cc0000;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .error.visible { display: block; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            display: none;
+        }
+
+        .loading.visible { display: block; }
+
+        .loading-step {
+            font-size: 13px;
+            margin-top: 6px;
+            color: #999;
+        }
+
+        .output {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 32px;
+            display: none;
+        }
+
+        .output.visible { display: block; }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #111;
+        }
+
+        .output-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .output-header .meta {
+            font-size: 11px;
+            color: #999;
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        .purpose-banner {
+            background: #f8f8f8;
+            border-left: 3px solid #111;
+            padding: 10px 14px;
+            margin-bottom: 24px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .purpose-banner .purpose-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+
+        .purpose-banner .purpose-text {
+            font-size: 13px;
+            color: #444;
+            line-height: 1.5;
+        }
+
+        .briefing-content h1,
+        .briefing-content h2,
+        .briefing-content h3 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #555;
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+
+        .briefing-content p {
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .briefing-content ul,
+        .briefing-content ol {
+            padding-left: 18px;
+            margin-bottom: 10px;
+        }
+
+        .briefing-content li {
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .briefing-content strong { color: #111; font-weight: 600; }
+        .briefing-content a { color: #0066cc; text-decoration: none; }
+        .briefing-content a:hover { text-decoration: underline; }
+
+        .briefing-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 13px;
+        }
+
+        .briefing-content th {
+            background: #f5f5f5;
+            padding: 7px 10px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #e0e0e0;
+        }
+
+        .briefing-content td {
+            padding: 7px 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .sources {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .sources h4 {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .sources ul { list-style: none; padding: 0; }
+        .sources li { font-size: 12px; margin-bottom: 4px; }
+        .sources a { color: #0066cc; text-decoration: none; }
+        .sources a:hover { text-decoration: underline; }
+
+        .action-row {
+            margin-top: 20px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chat-panel {
+            width: 0;
+            overflow: hidden;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+
+        .chat-panel.visible {
+            width: 40%;
+            min-width: 320px;
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .chat-header-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .chat-header-sub {
+            font-size: 11px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .chat-close:hover { color: #333; background: none; }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chat-message {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chat-message.user { align-items: flex-end; }
+        .chat-message.assistant { align-items: flex-start; }
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: #111;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.assistant .chat-bubble {
+            background: #f5f5f5;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-message.assistant .chat-bubble h1,
+        .chat-message.assistant .chat-bubble h2,
+        .chat-message.assistant .chat-bubble h3 {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #555;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        .chat-message.assistant .chat-bubble p { margin-bottom: 8px; font-size: 13px; }
+        .chat-message.assistant .chat-bubble ul,
+        .chat-message.assistant .chat-bubble ol { padding-left: 16px; margin-bottom: 8px; }
+        .chat-message.assistant .chat-bubble li { font-size: 13px; margin-bottom: 3px; }
+        .chat-message.assistant .chat-bubble strong { font-weight: 600; }
+        .chat-message.assistant .chat-bubble a { color: #0066cc; text-decoration: none; }
+
+        .chat-searching {
+            font-size: 11px;
+            color: #999;
+            padding: 0 4px;
+            font-style: italic;
+        }
+
+        .chat-typing {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 14px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .chat-typing span {
+            width: 6px;
+            height: 6px;
+            background: #999;
+            border-radius: 50%;
+            animation: bounce 1.2s infinite;
+        }
+
+        .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+        .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        .chat-input-area {
+            padding: 12px 16px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .chat-input-area input:focus { border-color: #333; }
+        .chat-send { padding: 9px 16px; font-size: 13px; }
+
+        .suggested-questions {
+            padding: 0 16px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .suggested-q {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 16px;
+            padding: 6px 12px;
+            font-size: 11px;
+            color: #444;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .suggested-q:hover { background: #e0e0e0; }
+
+        @media print {
+            body { overflow: auto; }
+            .app { display: block; height: auto; }
+            .left-panel { overflow: visible; padding: 0; }
+            .chat-panel { display: none !important; }
+            .api-row, .field-row, .company-row, .generate-row, .action-row,
+            .error, .loading, .divider, h1, .subtitle, .section-title { display: none !important; }
+            .output { border: none; padding: 0; display: block !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="left-panel" id="leftPanel">
+            <h1>Competitive Intelligence Briefing Tool</h1>
+            <p class="subtitle">Generate a tailored intelligence briefing with live web research and follow-up chat.</p>
+
+            <div class="section-title">API Keys</div>
+
+            <div class="api-row">
+                <label>Anthropic API Key</label>
+                <input type="password" id="anthropicKey" placeholder="sk-ant-..." />
+            </div>
+
+            <div class="api-row">
+                <label>Tavily API Key</label>
+                <input type="password" id="tavilyKey" placeholder="tvly-..." />
+            </div>
+
+            <hr class="divider">
+
+            <div class="section-title">Research Parameters</div>
+
+            <div class="company-row">
+                <div class="field-main">
+                    <label>Company Name</label>
+                    <input type="text" id="companyInput" placeholder="e.g. SharkNinja" />
+                </div>
+                <div class="field-secondary">
+                    <label>Industry / Ticker / Location <span style="color:#bbb;font-weight:400">(optional)</span></label>
+                    <input type="text" id="disambigInput" placeholder="e.g. NYSE: SN, consumer appliances" />
+                </div>
+            </div>
+
+            <div class="field-row">
+                <label>Purpose & Context</label>
+                <textarea id="purposeInput" placeholder="Describe why you're researching this company. Paste a full job description, write a few sentences about your goal, or describe the context.
+
+Examples:
+- I am interviewing for a Head of AI Transformation role reporting to the COO. [paste full JD]
+- I am preparing for a sales call with their VP of Marketing
+- I am evaluating this company as a potential investment"></textarea>
+                <div class="field-hint">You can paste an entire job description here for interview prep.</div>
+            </div>
+
+            <div class="generate-row">
+                <button onclick="generateBriefing()" id="generateBtn">Generate Briefing</button>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="loading" id="loading">
+                <div>Generating briefing...</div>
+                <div class="loading-step" id="loadingStep">Searching the web for current information...</div>
+            </div>
+
+            <div class="output" id="output">
+                <div class="output-header">
+                    <h2 id="outputTitle"></h2>
+                    <div class="meta" id="outputMeta"></div>
+                </div>
+
+                <div class="purpose-banner" id="purposeBanner">
+                    <div class="purpose-label">Prepared for</div>
+                    <div class="purpose-text" id="purposeDisplay"></div>
+                </div>
+
+                <div class="briefing-content" id="outputContent"></div>
+
+                <div class="sources" id="sourcesSection">
+                    <h4>Sources</h4>
+                    <ul id="sourcesList"></ul>
+                </div>
+
+                <div class="action-row">
+                    <button onclick="window.print()" class="btn-secondary">Download / Print as PDF</button>
+                    <button onclick="resetTool()" class="btn-secondary">New Briefing</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-panel" id="chatPanel">
+            <div class="chat-header">
+                <div>
+                    <div class="chat-header-title">Research Assistant</div>
+                    <div class="chat-header-sub" id="chatHeaderSub">Ask follow-up questions</div>
+                </div>
+                <button class="chat-close" onclick="closeChat()">×</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="suggested-questions" id="suggestedQuestions"></div>
+
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Ask a follow-up question..." onkeydown="if(event.key==='Enter') sendMessage()" />
+                <button class="chat-send" onclick="sendMessage()" id="chatSendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let briefingContext = '';
+        let purposeContext = '';
+        let companyContext = '';
+        let tavilyKeyGlobal = '';
+        let anthropicKeyGlobal = '';
+        let chatHistory = [];
+
+        async function searchWeb(query, tavilyKey) {
+            const response = await fetch('https://api.tavily.com/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    api_key: tavilyKey,
+                    query: query,
+                    search_depth: 'basic',
+                    max_results: 4,
+                    include_answer: true
+                })
+            });
+            if (!response.ok) throw new Error('Web search failed');
+            return await response.json();
+        }
+
+        async function generateBriefing() {
+            const anthropicKey = document.getElementById('anthropicKey').value.trim();
+            const tavilyKey = document.getElementById('tavilyKey').value.trim();
+            const company = document.getElementById('companyInput').value.trim();
+            const disambig = document.getElementById('disambigInput').value.trim();
+            const purpose = document.getElementById('purposeInput').value.trim();
+            // Save API keys to local storage
+            localStorage.setItem('anthropic_key', anthropicKey);
+            localStorage.setItem('tavily_key', tavilyKey);
+            const btn = document.getElementById('generateBtn');
+            const loading = document.getElementById('loading');
+            const output = document.getElementById('output');
+            const error = document.getElementById('error');
+            const loadingStep = document.getElementById('loadingStep');
+
+            if (!anthropicKey) { showError('Please enter your Anthropic API key.'); return; }
+            if (!tavilyKey) { showError('Please enter your Tavily API key.'); return; }
+            if (!company) { showError('Please enter a company name.'); return; }
+
+            error.classList.remove('visible');
+            output.classList.remove('visible');
+            closeChat();
+            loading.classList.add('visible');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+
+            anthropicKeyGlobal = anthropicKey;
+            tavilyKeyGlobal = tavilyKey;
+            companyContext = company;
+            purposeContext = purpose;
+
+            // Build search query with disambiguation
+            const searchCompany = disambig ? `${company} ${disambig}` : company;
+
+            try {
+                loadingStep.textContent = 'Searching for latest news and financials...';
+
+                const searches = await Promise.all([
+                    searchWeb(`${searchCompany} company overview business model 2025 2026`, tavilyKey),
+                    searchWeb(`${searchCompany} latest news developments 2025 2026`, tavilyKey),
+                    searchWeb(`${searchCompany} financial results revenue earnings 2025 2026`, tavilyKey),
+                    searchWeb(`${searchCompany} strategy priorities goals 2025 2026`, tavilyKey),
+                    searchWeb(`${searchCompany} CEO COO leadership team executives`, tavilyKey),
+                ]);
+
+                const allSources = [];
+                const searchContext = searches.map((result, i) => {
+                    const labels = ['Company Overview', 'Recent News', 'Financial Results', 'Strategy', 'Leadership'];
+                    if (result.results) {
+                        result.results.forEach(r => {
+                            if (r.url && !allSources.find(s => s.url === r.url)) {
+                                allSources.push({ title: r.title, url: r.url });
+                            }
+                        });
+                    }
+                    const content = result.results ? result.results.map(r => `${r.title}: ${r.content}`).join('\n') : '';
+                    return `[${labels[i]}]\n${content}`;
+                }).join('\n\n');
+
+                loadingStep.textContent = 'Writing tailored briefing...';
+
+                const purposeSection = purpose
+                    ? `CONTEXT & PURPOSE:\n${purpose}\n\nShape the briefing around this context. If a job description is provided, highlight what matters most for that role.`
+                    : '';
+
+                const disambigNote = disambig ? `Note: The company is specifically ${company} (${disambig}).` : '';
+
+                const prompt = `You are a senior business intelligence analyst. Using the research below, generate a comprehensive competitive intelligence briefing for ${company}.
+
+${disambigNote}
+${purposeSection}
+
+RESEARCH DATA:
+${searchContext}
+
+Generate a structured briefing with these sections using markdown:
+
+## Company Overview
+## Leadership Team
+## Recent News & Developments
+## Financial Highlights
+## Strategic Priorities
+## Key Risks & Headwinds
+## Opportunities & Tailwinds
+${purpose ? '## Relevance to Your Purpose' : ''}
+
+Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}.`;
+
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': anthropicKey,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-6',
+                        max_tokens: 2500,
+                        messages: [{ role: 'user', content: prompt }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || 'API request failed');
+                }
+
+                const data = await response.json();
+                const briefingText = data.content[0].text;
+                briefingContext = briefingText;
+
+                document.getElementById('outputTitle').textContent = company + ' — Intelligence Briefing';
+                document.getElementById('outputMeta').innerHTML = `Data as of ${new Date().toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}<br>Sources: ${allSources.length} web sources${disambig ? '<br>' + disambig : ''}`;
+
+                if (purpose) {
+                    const shortPurpose = purpose.length > 200 ? purpose.substring(0, 200) + '...' : purpose;
+                    document.getElementById('purposeDisplay').textContent = shortPurpose;
+                    document.getElementById('purposeBanner').style.display = 'block';
+                } else {
+                    document.getElementById('purposeBanner').style.display = 'none';
+                }
+
+                document.getElementById('outputContent').innerHTML = marked.parse(briefingText);
+
+                const sourcesList = document.getElementById('sourcesList');
+                sourcesList.innerHTML = '';
+                allSources.slice(0, 10).forEach(source => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="${source.url}" target="_blank">${source.title || source.url}</a>`;
+                    sourcesList.appendChild(li);
+                });
+
+                output.classList.add('visible');
+
+                // Auto-scroll to report
+                setTimeout(() => {
+                    document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+
+                openChat(company, purpose);
+
+            } catch (err) {
+                showError('Error: ' + err.message);
+            } finally {
+                loading.classList.remove('visible');
+                btn.disabled = false;
+                btn.textContent = 'Generate Briefing';
+            }
+        }
+
+        function openChat(company, purpose) {
+            chatHistory = [];
+            document.getElementById('chatMessages').innerHTML = '';
+            document.getElementById('chatPanel').classList.add('visible');
+            document.getElementById('leftPanel').classList.add('with-chat');
+            document.getElementById('chatHeaderSub').textContent = company;
+
+            addChatMessage('assistant', `I've reviewed the ${company} briefing. Ask me anything -- I can answer from the briefing or search the web for more detail.`);
+
+            const suggestions = purpose
+                ? generateSuggestions(company, purpose)
+                : [
+                    `Who is the CEO of ${company}?`,
+                    `What are ${company}'s biggest risks?`,
+                    `How is ${company} performing financially?`,
+                    `What is ${company}'s AI strategy?`
+                ];
+
+            const sqDiv = document.getElementById('suggestedQuestions');
+            sqDiv.innerHTML = '';
+            suggestions.forEach(q => {
+                const btn = document.createElement('button');
+                btn.className = 'suggested-q';
+                btn.textContent = q;
+                btn.onclick = () => {
+                    document.getElementById('chatInput').value = q;
+                    sendMessage();
+                };
+                sqDiv.appendChild(btn);
+            });
+        }
+
+        function generateSuggestions(company, purpose) {
+            const purposeLower = purpose.toLowerCase();
+            if (purposeLower.includes('interview') || purposeLower.includes('role') || purposeLower.includes('job')) {
+                return [
+                    `What should I know about the hiring manager?`,
+                    `What are ${company}'s biggest transformation challenges?`,
+                    `What questions might they ask me?`,
+                    `What makes ${company}'s culture distinctive?`
+                ];
+            }
+            if (purposeLower.includes('sales') || purposeLower.includes('pitch')) {
+                return [
+                    `What are ${company}'s biggest pain points?`,
+                    `Who are the key decision makers?`,
+                    `What initiatives are they investing in?`,
+                    `Who are their main competitors?`
+                ];
+            }
+            return [
+                `What is ${company}'s AI strategy?`,
+                `Who leads ${company}?`,
+                `What are the biggest risks?`,
+                `What is their growth strategy?`
+            ];
+        }
+
+        function closeChat() {
+            document.getElementById('chatPanel').classList.remove('visible');
+            document.getElementById('leftPanel').classList.remove('with-chat');
+        }
+
+        function addChatMessage(role, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `chat-message ${role}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+
+            if (role === 'assistant') {
+                bubble.innerHTML = marked.parse(content);
+            } else {
+                bubble.textContent = content;
+            }
+
+            msgDiv.appendChild(bubble);
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return msgDiv;
+        }
+
+        function addTypingIndicator() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chat-message assistant';
+            msgDiv.id = 'typingIndicator';
+            msgDiv.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) indicator.remove();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const sendBtn = document.getElementById('chatSendBtn');
+            input.value = '';
+            sendBtn.disabled = true;
+
+            addChatMessage('user', message);
+            addTypingIndicator();
+
+            chatHistory.push({ role: 'user', content: message });
+
+            try {
+                const needsSearch = await shouldSearch(message);
+                let additionalContext = '';
+
+                if (needsSearch) {
+                    removeTypingIndicator();
+
+                    const searchingDiv = document.createElement('div');
+                    searchingDiv.className = 'chat-message assistant';
+                    searchingDiv.innerHTML = '<div class="chat-searching">Searching the web...</div>';
+                    document.getElementById('chatMessages').appendChild(searchingDiv);
+
+                    const searchResult = await searchWeb(`${companyContext} ${message}`, tavilyKeyGlobal);
+                    if (searchResult.results) {
+                        additionalContext = '\n\nADDITIONAL WEB RESEARCH:\n' + searchResult.results.map(r => `${r.title}: ${r.content}`).join('\n');
+                    }
+
+                    searchingDiv.remove();
+                    addTypingIndicator();
+                }
+
+                const systemPrompt = `You are a business intelligence research assistant. You have already generated a briefing for ${companyContext}.
+
+BRIEFING CONTEXT:
+${briefingContext}
+
+${purposeContext ? `USER PURPOSE/CONTEXT:\n${purposeContext}` : ''}
+${additionalContext}
+
+Answer the user's question using the briefing context and any additional research provided. Be concise and specific. Use markdown formatting where helpful. If you searched the web for this answer, briefly note that.`;
+
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': anthropicKeyGlobal,
+                        'anthropic-version': '2023-06-01',
+                        'anthropic-dangerous-direct-browser-access': 'true'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-6',
+                        max_tokens: 1000,
+                        system: systemPrompt,
+                        messages: chatHistory
+                    })
+                });
+
+                if (!response.ok) throw new Error('API request failed');
+
+                const data = await response.json();
+                const reply = data.content[0].text;
+
+                chatHistory.push({ role: 'assistant', content: reply });
+
+                removeTypingIndicator();
+                addChatMessage('assistant', reply);
+
+            } catch (err) {
+                removeTypingIndicator();
+                addChatMessage('assistant', 'Sorry, something went wrong. Please try again.');
+            } finally {
+                sendBtn.disabled = false;
+                document.getElementById('chatInput').focus();
+            }
+        }
+
+        async function shouldSearch(message) {
+            const searchTriggers = [
+                'latest', 'recent', 'news', 'current', 'today', 'now',
+                'tell me more', 'more detail', 'dig deeper', 'expand',
+                'who is', 'what is', 'how much', 'when did', 'find',
+                'search', 'look up', 'research'
+            ];
+            const msgLower = message.toLowerCase();
+            return searchTriggers.some(trigger => msgLower.includes(trigger));
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.add('visible');
+        }
+
+        function resetTool() {
+            document.getElementById('output').classList.remove('visible');
+            document.getElementById('companyInput').value = '';
+            document.getElementById('disambigInput').value = '';
+            document.getElementById('purposeInput').value = '';
+            closeChat();
+            briefingContext = '';
+            chatHistory = [];
+            document.getElementById('companyInput').focus();
+        }
+          // Load saved API keys on page open
+        window.addEventListener('load', function() {
+            const savedAnthropic = localStorage.getItem('anthropic_key');
+            const savedTavily = localStorage.getItem('tavily_key');
+            if (savedAnthropic) document.getElementById('anthropicKey').value = savedAnthropic;
+            if (savedTavily) document.getElementById('tavilyKey').value = savedTavily;
+        });
+    </script>
+</body>
+</html>
