@@ -54,31 +54,6 @@
             margin-bottom: 12px;
         }
 
-        .api-row {
-            margin-bottom: 12px;
-        }
-
-        .api-row label {
-            display: block;
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .api-row input {
-            width: 100%;
-            padding: 9px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 13px;
-            font-family: monospace;
-            outline: none;
-            background: white;
-        }
-
-        .api-row input:focus { border-color: #333; }
-
         .divider {
             border: none;
             border-top: 1px solid #e0e0e0;
@@ -539,7 +514,7 @@
             .app { display: block; height: auto; }
             .left-panel { overflow: visible; padding: 0; }
             .chat-panel { display: none !important; }
-            .api-row, .field-row, .company-row, .generate-row, .action-row,
+            .field-row, .company-row, .generate-row, .action-row,
             .error, .loading, .divider, h1, .subtitle, .section-title { display: none !important; }
             .output { border: none; padding: 0; display: block !important; }
         }
@@ -550,8 +525,6 @@
         <div class="left-panel" id="leftPanel">
             <h1>Competitive Intelligence Briefing Tool</h1>
             <p class="subtitle">Generate a tailored intelligence briefing with live web research and follow-up chat.</p>
-
-        
 
             <div class="section-title">Research Parameters</div>
 
@@ -636,7 +609,6 @@ Examples:
         let briefingContext = '';
         let purposeContext = '';
         let companyContext = '';
-        let anthropicKeyGlobal = '';
         let chatHistory = [];
 
         async function searchWeb(query) {
@@ -644,7 +616,6 @@ Examples:
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-        
                     query: query,
                     search_depth: 'basic',
                     max_results: 4,
@@ -677,7 +648,6 @@ Examples:
             companyContext = company;
             purposeContext = purpose;
 
-            // Build search query with disambiguation
             const searchCompany = disambig ? `${company} ${disambig}` : company;
 
             try {
@@ -736,12 +706,7 @@ Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US'
 
                 const response = await fetch('/api/anthropic', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': anthropicKey,
-                        'anthropic-version': '2023-06-01',
-                        'anthropic-dangerous-direct-browser-access': 'true'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-6',
                         max_tokens: 2500,
@@ -781,7 +746,6 @@ Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US'
 
                 output.classList.add('visible');
 
-                // Auto-scroll to report
                 setTimeout(() => {
                     document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 100);
@@ -942,12 +906,7 @@ Answer the user's question using the briefing context and any additional researc
 
                 const response = await fetch('/api/anthropic', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': anthropicKeyGlobal,
-                        'anthropic-version': '2023-06-01',
-                        'anthropic-dangerous-direct-browser-access': 'true'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-6',
                         max_tokens: 1000,
@@ -1002,8 +961,6 @@ Answer the user's question using the briefing context and any additional researc
             chatHistory = [];
             document.getElementById('companyInput').focus();
         }
-          // Load saved API keys on page open
-        
     </script>
 </body>
 </html>
