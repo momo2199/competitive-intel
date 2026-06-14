@@ -7,12 +7,10 @@ export default async function handler(req, res) {
         const response = await fetch('https://api.tavily.com/search', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.TAVILY_API_KEY}`
             },
-            body: JSON.stringify({
-                ...req.body,
-                api_key: process.env.TAVILY_API_KEY
-            })
+            body: JSON.stringify(req.body)
         });
 
         const data = await response.json();
