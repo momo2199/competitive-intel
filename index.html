@@ -709,7 +709,7 @@ Be specific and factual. Today's date is ${new Date().toLocaleDateString('en-US'
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-6',
-                        max_tokens: 2500,
+                        max_tokens: 8000,
                         messages: [{ role: 'user', content: prompt }]
                     })
                 });
@@ -952,15 +952,16 @@ Answer the user's question using the briefing context and any additional researc
         }
 
         function resetTool() {
-            document.getElementById('output').classList.remove('visible');
-            document.getElementById('companyInput').value = '';
-            document.getElementById('disambigInput').value = '';
-            document.getElementById('purposeInput').value = '';
-            closeChat();
-            briefingContext = '';
-            chatHistory = [];
-            document.getElementById('companyInput').focus();
-        }
+    document.getElementById('output').classList.remove('visible');
+    document.getElementById('companyInput').value = '';
+    document.getElementById('disambigInput').value = '';
+    document.getElementById('purposeInput').value = '';
+    closeChat();
+    document.getElementById('chatPanel').style.width = '';
+    briefingContext = '';
+    chatHistory = [];
+    document.getElementById('companyInput').focus();
+}
     </script>
 </body>
 </html>
